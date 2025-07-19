@@ -8,10 +8,20 @@ $dotenv->load();
 use Discord\Discord;
 use Discord\Parts\Channel\Message;
 use Discord\WebSockets\Intents;
+use Discord\DiscordCommandClient;
 
-$discord = new Discord([
+$discord = new DiscordCommandClient([
     'token' => $_ENV['DISCORD_BOT_TOKEN'],
-    'intents' => Intents::getDefaultIntents() | Intents::MESSAGE_CONTENT,
+    'prefix' => $_ENV['COMMAND_PREFIX'],
+    'discordOptions' => [
+        'intents' => Intents::getDefaultIntents() | Intents::MESSAGE_CONTENT,
+    ],
+]);
+
+$discord->registerCommand('ping', function($message){
+    return "Pong";
+}, [
+    'description' => 'Testing command to see if it runs',
 ]);
 
 $discord->on('init', function(Discord $discord){
@@ -21,10 +31,6 @@ $discord->on('init', function(Discord $discord){
         if($message->author->bot) {
             // Do nothing
             return;
-        }
-        
-        if($message->content == "!ping") {
-            $message->reply('Pong !');
         }
     });
 });
