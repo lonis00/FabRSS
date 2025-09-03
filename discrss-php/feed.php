@@ -12,9 +12,9 @@ class Feed {
         $json_as_string = file_get_contents('./feedfile.json');
         $data = json_decode($json_as_string, true);
         if(count($data["feeds"]) > 0) {
-            foreach ($data["feeds"] as $feed_name => $feed_object) {
-                if($name == $feed_name){
-                    $this->name = $feed_name;
+            foreach ($data["feeds"] as $feed_object) {
+                if($name == $feed_object["name"]){
+                    $this->name = $feed_object["name"];
                     $this->hash = $feed_object["hash"];
                     $this->url = $feed_object["url"];
                     $this->channel_id = $feed_object["channel_id"];
@@ -71,6 +71,22 @@ class Feed {
         fwrite($feed_file, $json_data);
         fclose($feed_file);
         return 1;
+    }
+
+    public function delete() {
+        $feed_str = file_get_contents('./feedfile.json');
+        $data = json_decode($feed_str, true);
+        for ($i=0; $i < count($data["feeds"]); $i++) { 
+            $feed_array = $data["feeds"][$i];
+            if($this->name == $feed_array["name"]) {
+                unset($data["feeds"][$i]);
+                break;
+            }
+        }
+        $feed_file = fopen('./feedfile.json', 'w') or die("Unable to open the file for saving");
+        $json_data = json_encode($data, JSON_PRETTY_PRINT);
+        fwrite($feed_file, $json_data);
+        fclose($feed_file);
     }
 }
 ?>

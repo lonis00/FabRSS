@@ -54,6 +54,24 @@ $discord->registerCommand('addFeed', function($message, $params) {
     return $response;
 });
 
+$discord->registerCommand('removeFeed', function($message, $params) {
+    global $discord;
+    $response = "";
+    $errors = array();
+
+    $feed_url = $params[0];
+
+    if(!filter_var($feed_url, FILTER_VALIDATE_URL)){
+        $errors[] = "Le premier paramètre n'est pas un lien correct.";
+    }
+    $response_status = remove_feed($feed_url);
+    if($response_status == 404)
+        $response = "Le fichier XML ou le flux n'ont pas été trouvé, verifiez votre URL.";
+    elseif($response_status == 200)
+        $response = "Flux supprimé 🗑️.";
+    return $response;
+});
+
 $discord->on('init', function(Discord $discord){
     echo "Bot is ready!", PHP_EOL;
 
