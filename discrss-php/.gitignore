@@ -1,2 +1,4 @@
 .env
 vendor/
+feedfile.json
+xml_files/
