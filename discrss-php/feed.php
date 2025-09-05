@@ -53,15 +53,17 @@ class Feed {
         $feed_str = file_get_contents('./feedfile.json');
         $data = json_decode($feed_str, true);
         if($already_exist) {
-            foreach ($data["feeds"] as $feed_name => $feed_object) {
-                if($this->name == $feed_name){
+            $new_data = array();
+            foreach ($data["feeds"] as $feed_object) {
+                if($this->name == $feed_object["name"]){
                     $feed_object["hash"] = $this->hash;
                     $feed_object["channel_id"] = $this->channel_id;
                     $feed_object["guild_id"] = $this->guild_id;
                     $feed_object["url"] = $this->url;
-                    break;
                 }
+                $new_data["feeds"][] = $feed_object;
             }
+            $data = $new_data;
         } else {
             $data["feeds"][] = $this->to_array();
         }
