@@ -74,21 +74,5 @@ class Feed {
         fclose($feed_file);
         return 1;
     }
-
-    public function delete() {
-        $feed_str = file_get_contents('./feedfile.json');
-        $data = json_decode($feed_str, true);
-        for ($i=0; $i < count($data["feeds"]); $i++) { 
-            $feed_array = $data["feeds"][$i];
-            if($this->name == $feed_array["name"]) {
-                unset($data["feeds"][$i]);
-                break;
-            }
-        }
-        $feed_file = fopen('./feedfile.json', 'w') or die("Unable to open the file for saving");
-        $json_data = json_encode($data, JSON_PRETTY_PRINT);
-        fwrite($feed_file, $json_data);
-        fclose($feed_file);
-    }
 }
 ?>
