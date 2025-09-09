@@ -7,25 +7,17 @@ $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
 use Discord\Discord;
-// use Discord\Parts\Channel\Message;
-// use Discord\WebSockets\Intents;
-// use Discord\DiscordCommandClient;
 use Discord\Builders\MessageBuilder;
 use Discord\Builders\CommandBuilder;
 use Discord\Parts\Interactions\Command\Command;
 use Discord\Parts\Interactions\interaction;
 use Discord\Parts\Interactions\Command\Option;
 
-// $discord = new DiscordCommandClient([
 $discord = new Discord([
     'token' => $_ENV['DISCORD_BOT_TOKEN'],
-    // 'prefix' => $_ENV['COMMAND_PREFIX'],
-    // 'discordOptions' => [
-    //     'intents' => Intents::getDefaultIntents() | Intents::MESSAGE_CONTENT,
-    // ],
 ]);
 
-function add_feed_cmd($client, $feed_url, $channel) {
+function call_add_feed($client, $feed_url, $channel) {
     $response = "";
     $response_status = add_feed($feed_url, $channel->guild->id, $channel->id);
     if($response_status == 404)
@@ -47,6 +39,7 @@ function call_remove_feed($url) {
 }
 
 function register_commands($client) {
+    print "Initializing commands\n";
     $commands = array(
         "addfeed" => $client->application->commands->create(
             CommandBuilder::new()
@@ -91,25 +84,25 @@ function register_commands($client) {
     }
 }
 
+function call_check_for_updates($client, $limit_items = -1) {
+    check_for_updates($client, $limit_items);
+}
+
 
 $discord->on('init', function(Discord $discord){
     echo "Bot is ready!", PHP_EOL;
 
-    print "Preparing commands\n";
     register_commands($discord);
 
     $discord->listenCommand('addfeed', function(interaction $interaction) {
         $url = $interaction->data->options->offsetGet('url')->value;
         $channel = $interaction->data->resolved->channels->first();
-        $response_message = add_feed_cmd($discord, $url, $channel);
+        $response_message = call_add_feed($discord, $url, $channel);
         $interaction->respondWithMessage(MessageBuilder::new()->setContent($response_message));
     });
 
     $discord->listenCommand('removefeed', function(interaction $interaction) {
-        print "Feed à supprimer !\n";
         $url = $interaction->data->options->offsetGet('url')->value;
-        print "URL = ".$url."\n";
-
         $function_response = call_remove_feed($url);
         $interaction->respondWithMessage(MessageBuilder::new()->setContent($function_response));
     });
@@ -119,6 +112,16 @@ $discord->on('init', function(Discord $discord){
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Pong!'));
     });
 
+    call_check_for_updates($discord, $_ENV['INIT_POSTS_LIMIT']);
+    $target_time = strtotime('+1 minute', strtotime('now'));
+    $discord->on('heartbeat-ack', function($time, $discord){
+        global $target_time;
+        $current_time = strtotime('now');
+        if($current_time >= $target_time) {
+            call_check_for_updates($discord, $_ENV['POSTS_LIMIT']);
+            $target_time = strtotime('+1 minute', $current_time);
+        }
+    });
 });
 
 $discord->run();
